@@ -2,12 +2,6 @@
 #include "shading.cuh"
 #include "render.cuh"
 
-// LCG returns [0, 1)
-__device__ float random_float(unsigned int& seed) {
-    seed = seed * 1664525u + 1013904223u;
-    return static_cast<float>(seed & 0x00FFFFFFu) * (1.0f / 16777216.0f);
-}
-
 // same as trace_ray but early-exit shadows and cached sphere
 __host__ __device__ vec3 trace_ray_optimized(ray r, sphere* spheres, int num_spheres, vec3 light_position) {
     vec3 final_color(0.0f, 0.0f, 0.0f);

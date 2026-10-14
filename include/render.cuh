@@ -7,6 +7,12 @@ inline constexpr int SAMPLES_PER_PIXEL = 4;
 inline constexpr int MAX_BOUNCES = 5;
 inline constexpr int MAX_SPHERES = 4;
 
+// LCG returns [0, 1)
+__host__ __device__ inline float random_float(unsigned int& seed) {
+    seed = seed * 1664525u + 1013904223u;
+    return static_cast<float>(seed & 0x00FFFFFFu) * (1.0f / 16777216.0f);
+}
+
 // z is up
 // camera looks along +y
 struct render_params {
