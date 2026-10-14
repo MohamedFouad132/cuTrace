@@ -1,20 +1,13 @@
 #!/bin/bash
 
-# benchmark.sh
-# This script benchmarks the raytracer executable across different resolutions and modes.
-# It builds the project, runs the benchmarks and generates a report in Markdown format.
-
 cd "$(dirname "$0")/.."
 
-
-# Build the project
 echo "[1/3] Building project..."
 mkdir -p build
 cd build
 cmake .. > /dev/null
 make > /dev/null
 
-# Check if the build was successful
 if [ ! -f "raytracer" ]; then
     echo "Error: build failed, raytracer executable not found"
     exit 1
@@ -22,8 +15,6 @@ fi
 
 echo "Build successful."
 echo ""
-
-# Configuration for benchmarking
 
 RESOLUTIONS=(
     "640x480" # VGA 
