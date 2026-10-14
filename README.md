@@ -102,22 +102,26 @@ chmod +x benchmark.sh
 
 ## Results
 
-**NVIDIA RTX 5080**
+- **Hardware:** NVIDIA RTX 5080 and AMD Ryzen 7 9700X (8 cores with 16 threads)
+- **Method:** 20 runs per mode displayed as mean ± standard deviation. GPU times are kernel-only.
 
-| Resolution | Mode | Mean (ms) | StdDev (ms) | Min (ms) | Max (ms) | Speedup vs CPU |
-|---|---|---|---|---|---|---|
-| 640x480 | cpu | 173.43 | 3.55 | 167.70 | 176.29 | 1.00x |
-| 640x480 | gpu | 0.18 | 0.01 | 0.17 | 0.19 | 967.39x |
-| 640x480 | gpu-optimized | 0.08 | 0.00 | 0.08 | 0.09 | 2122.80x |
-| 1280x720 | cpu | 518.46 | 2.42 | 515.32 | 520.91 | 1.00x |
-| 1280x720 | gpu | 0.21 | 0.00 | 0.21 | 0.22 | 2429.53x |
-| 1280x720 | gpu-optimized | 0.12 | 0.01 | 0.12 | 0.13 | 4271.39x |
-| 1920x1080 | cpu | 1171.76 | 10.67 | 1162.40 | 1190.17 | 1.00x |
-| 1920x1080 | gpu | 0.30 | 0.00 | 0.29 | 0.31 | 3911.59x |
-| 1920x1080 | gpu-optimized | 0.19 | 0.00 | 0.19 | 0.19 | 6141.28x |
-| 3840x2160 | cpu | 4699.12 | 24.10 | 4676.46 | 4740.13 | 1.00x |
-| 3840x2160 | gpu | 0.70 | 0.01 | 0.69 | 0.72 | 6693.52x |
-| 3840x2160 | gpu-optimized | 0.57 | 0.00 | 0.56 | 0.58 | 8239.73x |
+### Render Time (ms)
+
+| Resolution | CPU | GPU | Optimized GPU |
+|:---|---:|---:|---:|
+| 640 × 480 | 3.57 ± 0.11 | 0.0329 ± 0.0018 | **0.0318** ± 0.0015 |
+| 1280 × 720 | 10.04 ± 0.17 | 0.0719 ± 0.0006 | **0.0675** ± 0.0008 |
+| 1920 × 1080 | 22.52 ± 0.48 | 0.1456 ± 0.0005 | **0.1374** ± 0.0007 |
+| 3840 × 2160 | 87.62 ± 0.88 | 0.5436 ± 0.0017 | **0.5113** ± 0.0017 |
+
+### Speedup
+
+| Resolution | GPU vs CPU | Optimized GPU vs CPU | Optimized GPU vs GPU |
+|:---|---:|---:|---:|
+| 640 × 480 | 108.6× | **112.5×** | 1.04× |
+| 1280 × 720 | 139.6× | **148.7×** | 1.07× |
+| 1920 × 1080 | 154.7× | **163.9×** | 1.06× |
+| 3840 × 2160 | 161.2× | **171.4×** | 1.06× |
 
 ## Optimizations
 
@@ -141,10 +145,10 @@ chmod +x benchmark.sh
 
 ## Key Findings
 
-- CPU (multithreaded) vs GPU speedup: 3500.51x average
-- CPU (multithreaded) vs optimized GPU speedup: 5193.80x average
-- Largest single speedup: 8239.73x (3840x2160, CPU vs optimized GPU)
-- GPU vs optimized GPU speedup: 1.70x average
+- The GPU was **141x** faster than the CPU on average
+- The optimized GPU was **149x** faster than the CPU on average
+- The biggest speedup was **171x** at 4K with the optimized GPU
+- The optimized GPU was **1.06x** faster than the regular GPU on average
 
 ## Derivations
 
