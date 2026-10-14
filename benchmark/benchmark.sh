@@ -29,7 +29,7 @@ MODES=(
     "gpu-optimized"
 )
 
-RUNS_PER_MODE=5
+RUNS_PER_MODE=20
 
 RAW_CSV="../benchmark/benchmark_raw.csv"
 REPORT_MD="../benchmark/benchmark_results.md"
