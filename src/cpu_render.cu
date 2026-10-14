@@ -1,4 +1,3 @@
-#include <random>
 #include <thread>
 #include <vector>
 #include <atomic>
@@ -7,14 +6,13 @@
 static void render_row(int y, vec3* framebuffer, const render_params& p) {
     for (int x = 0; x < p.width; x++) {
         int pixel_index = y * p.width + x;
-        std::mt19937 rng(pixel_index);
-        std::uniform_real_distribution<float> dist(-0.5f, 0.5f);
+        unsigned int seed = pixel_index * 3242174893u + 123456789u;
         vec3 pixel_color(0.0f, 0.0f, 0.0f);
 
         // jittered samples for anti aliasing
         for (int s = 0; s < SAMPLES_PER_PIXEL; s++) {
-            float jitter_x = dist(rng);
-            float jitter_y = dist(rng);
+            float jitter_x = random_float(seed) - 0.5f;
+            float jitter_y = random_float(seed) - 0.5f;
 
             float u = (static_cast<float>(x) + jitter_x) / (p.width - 1);
             float v = (static_cast<float>(y) + jitter_y) / (p.height - 1);
