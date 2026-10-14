@@ -1,19 +1,16 @@
 # cuTrace (CUDA / C++)
 
-A GPU-accelerated ray tracer built from scratch. Includes core rendering logic (reflections, shadows, anti-aliasing), optimizations using Nsight, CPU/GPU benchmarking and CMake for build automation.
+A GPU-accelerated ray tracer built from scratch. Includes core rendering logic (reflections, shadows, anti-aliasing), Nsight-guided optimizations, CPU/GPU benchmarking and CMake for build automation.
 
 ## Project Features
 
-* 💡 Ray tracer with reflections shadows, and anti-aliasing 
-* 🕹️ 3 render paths (multithreaded CPU, GPU, Opt. GPU)
-* 🚀 One command builds, renders, and displays the result
-* ⚙️ CLI configurability for resolution and render path
-* 📈 Automated benchmarks with warmup runs and repeated trials
-* 🧩 Modular file structure separating rendering logic, kernels, and CPU path
-* 📁 Clean folder structure and CMake build automation
-* 📐 Documented math derivations
+- Ray tracer with reflections, shadows and anti-aliasing
+- Three render paths: multithreaded CPU, GPU and optimized GPU
+- Configurable resolution and render path from the command line
+- Automated benchmarks with warmup runs and repeated trials
+- Math derivations in `docs/derivations.md`
 
-## Rendered Output (NVIDIA RTX 5080, 1920 x 1080)
+## Rendered Output (NVIDIA RTX 5080, 1920x1080)
 
 ![cuTrace render](docs/Tracing.png)
 
@@ -37,6 +34,7 @@ cuTrace/
 │   ├── ray.cuh
 │   ├── sphere.cuh
 │   ├── intersect.cuh
+│   ├── shading.cuh
 │   └── render.cuh
 ├── benchmark/
 │   ├── benchmark.sh
@@ -51,17 +49,16 @@ cuTrace/
 
 - NVIDIA GPU
 - CUDA Toolkit 12.x or newer
-- C++17 compatible compiler (usually installed automatically with the CUDA Toolkit)
+- C++17-compatible compiler (usually installed automatically with the CUDA Toolkit)
 - Python 3
 - CMake 3.18+
 - Bash
 - Git
-- ImageMagick (converts ppm to png)
+- ImageMagick (converts PPM to PNG)
 
 ## Setup
 
 **Option A: Manually Build + Execute**
-
 
 ```bash
 git clone https://github.com/MohamedFouad132/cuTrace.git
@@ -75,7 +72,6 @@ convert output.ppm output.png
 
 **Option B: Use `render.sh` to Build + Execute**
 
-
 ```bash
 git clone https://github.com/MohamedFouad132/cuTrace.git
 cd cuTrace
@@ -87,16 +83,16 @@ chmod +x render.sh
 ```
 --width <n>     Image width in pixels (default: 1920)
 --height <n>    Image height in pixels (default: 1080)
---mode <mode>   Render path: cpu, gpu, gpu-optimized (default: gpu)
---benchmark     Write precise render time to last_render_time.txt
---help, -h      Show usage information
+--mode <mode>   Render mode: cpu, gpu, gpu-optimized (default: gpu)
+--help, -h      Show this message
+--benchmark     Write precise render time to last_render_time.txt (default: off)
 ```
 
-Open `build/output.png` to view result.
+Open `build/output.png` to view the result.
 
 ## Benchmarks
 
-To benchmark across all modes and resolutions
+To benchmark across all modes and resolutions:
 
 ```bash
 cd benchmark
@@ -106,10 +102,9 @@ chmod +x benchmark.sh
 
 ## Results
 
-
 **NVIDIA RTX 5080**
 
-| Resolution | Mode | Mean (ms) | StdDev (ms) | Min (ms) | Max (ms) | Speedup vs CPU|
+| Resolution | Mode | Mean (ms) | StdDev (ms) | Min (ms) | Max (ms) | Speedup vs CPU |
 |---|---|---|---|---|---|---|
 | 640x480 | cpu | 173.43 | 3.55 | 167.70 | 176.29 | 1.00x |
 | 640x480 | gpu | 0.18 | 0.01 | 0.17 | 0.19 | 967.39x |
@@ -124,31 +119,32 @@ chmod +x benchmark.sh
 | 3840x2160 | gpu | 0.70 | 0.01 | 0.69 | 0.72 | 6693.52x |
 | 3840x2160 | gpu-optimized | 0.57 | 0.00 | 0.56 | 0.58 | 8239.73x |
 
-## Optimizations:
+## Optimizations
 
-**Problem:** Theoretical occupancy  was capped at 75% due to register pressure (68 registers/thread, 3 resident blocks/SM vs a 4-block ceiling)
+**Problem:** Theoretical occupancy was capped at 75% due to register pressure (68 registers/thread), allowing only 3 resident blocks/SM vs a 4-block ceiling.
 
-**Solution:** Replaced `curandState` with a lightweight LCG. Register pressure dropped enough to reach 100% theoretical occupancy (~70% → ~90% achieved).
+**Optimization:** Replaced `curandState` with a lightweight LCG. Register pressure dropped enough to reach 100% theoretical occupancy. Achieved occupancy increased from ~70% to ~90%.
 
-**Problem:** Shadow rays used `hit_scene`, which finds the closest blocker even though shadows only need a yes/no answer
+**Problem:** Shadow rays searched for the closest blocker when they only need a yes or no.
 
-**Solution:** Replaced with `hit_anything`, an early-exit check that returns on the first blocker found
+**Optimization:** Switched to `hit_anything`, which returns on the first blocker.
 
-**Problem:** `spheres[hit_index]` was read from global memory up to 5 times per bounce, and accessed per-thread with a varying index (uncoalesced, 4 of 32 bytes/sector utilized)
+**Problem:** The hit sphere was read from global memory up to 5 times per bounce since the compiler couldn't rule out pointer aliasing.
 
-**Solution:** Cached the hit sphere's data in a local variable, and moved the sphere array into shared memory to reduce redundant global reads
+**Optimization:** Copied the hit sphere into a local variable so the compiler could keep it in registers.
 
-**Investigated and ruled out:** Warp divergence was hypothesized as a risk given variable bounce depth, but Nsight showed 99.47% branch efficiency. This is likely because the scene is not very complex (only 4 objects)
+**Problem:** Every ray read every sphere from global memory with uncoalesced access (4 of 32 bytes per sector used).
 
+**Optimization:** Loaded the sphere array into shared memory once per block.
+
+**Investigated and ruled out:** Warp divergence was not a bottleneck as Nsight showed 99.47% branch efficiency despite variable bounce depth.
 
 ## Key Findings
 
-- CPU (multithreaded) vs GPU speedup: 3,500.51x average
-- CPU (multithreaded) vs optimized GPU speedup: 5,193.80x average
-- Largest single speedup: 8,239.73x (3840×2160, optimized GPU vs CPU)
-- Naive → optimized GPU speedup: 1.70x average
-
-
+- CPU (multithreaded) vs GPU speedup: 3500.51x average
+- CPU (multithreaded) vs optimized GPU speedup: 5193.80x average
+- Largest single speedup: 8239.73x (3840x2160, CPU vs optimized GPU)
+- GPU vs optimized GPU speedup: 1.70x average
 
 ## Derivations
 
@@ -157,5 +153,3 @@ Full derivations for the intersection and reflection formulas: [docs/derivations
 ## License
 
 MIT License: [LICENSE](LICENSE)
-
-
