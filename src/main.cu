@@ -123,19 +123,27 @@ int main(int argc, char** argv) {
         dim3 blockDim(16, 16);
         dim3 gridDim((width + blockDim.x - 1) / blockDim.x, (height + blockDim.y - 1) / blockDim.y);
 
+        auto launch = [&]() {
+            if (mode == "gpu-optimized") {
+                gpu_render_optimized<<<gridDim, blockDim>>>(d_framebuffer, params);
+            } else {
+                gpu_render<<<gridDim, blockDim>>>(d_framebuffer, params);
+            }
+        };
+
         cudaEvent_t start, stop;
 
         if (benchmark_mode) {
+            // warmup launch so kernel loading isn't timed (lazy loading)
+            launch();
+            cudaDeviceSynchronize();
+
             cudaEventCreate(&start);
             cudaEventCreate(&stop);
             cudaEventRecord(start);
         }
 
-        if (mode == "gpu-optimized") {
-            gpu_render_optimized<<<gridDim, blockDim>>>(d_framebuffer, params);
-        } else {
-            gpu_render<<<gridDim, blockDim>>>(d_framebuffer, params);
-        }
+        launch();
 
         if (benchmark_mode) {
             cudaEventRecord(stop);
