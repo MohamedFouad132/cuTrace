@@ -1,10 +1,6 @@
 #!/bin/bash
 
-# render.sh
-# Convenience wrapper for running the ray tracer without manually building first.
-# Builds the project only if it hasn't been built yet, then forwards all arguments directly to the raytracer executable.
-# Usage: ./render.sh [options]
-# Run ./render.sh --help to see available options.
+# builds if needed and forwards args to raytracer
 
 cd "$(dirname "$0")"
 
@@ -20,7 +16,7 @@ fi
 cd build
 ./raytracer "$@"
 
-# Convert the rendered PPM to PNG, if ImageMagick is available
+# PPM -> PNG if ImageMagick is found
 if [ -f "output.ppm" ] && command -v convert > /dev/null; then
     convert output.ppm output.png
 else
