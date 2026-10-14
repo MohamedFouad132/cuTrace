@@ -48,7 +48,19 @@ def main():
                     continue
                 s = summary[(res, mode)]
                 speedup = f"{cpu_mean / s['mean']:.2f}x" if cpu_mean else "N/A"
-                mdfile.write(f"| {res} | {mode} | {s['mean']:.2f} | {s['stddev']:.2f} | {s['min']:.2f} | {s['max']:.2f} | {speedup} |\n")
+                mdfile.write(f"| {res} | {mode} | {s['mean']:.4f} | {s['stddev']:.4f} | {s['min']:.4f} | {s['max']:.4f} | {speedup} |\n")
+
+        # naive gpu vs optimized gpu at each resolution
+        mdfile.write("\n## GPU vs Optimized GPU\n\n")
+        mdfile.write("| Resolution | GPU (ms) | Optimized GPU (ms) | Time saved (ms) | Speedup |\n")
+        mdfile.write("|---|---|---|---|---|\n")
+
+        for res in resolutions:
+            if (res, 'gpu') not in summary or (res, 'gpu-optimized') not in summary:
+                continue
+            gpu = summary[(res, 'gpu')]['mean']
+            opt = summary[(res, 'gpu-optimized')]['mean']
+            mdfile.write(f"| {res} | {gpu:.4f} | {opt:.4f} | {gpu - opt:.4f} | {gpu / opt:.2f}x |\n")
 
     print(f"Benchmark report generated and saved to {output_md}")
 
