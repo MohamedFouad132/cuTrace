@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.18)
 project(cuTrace LANGUAGES CXX CUDA)
 
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+
 set(CMAKE_CUDA_STANDARD 17)
 set(CMAKE_CUDA_ARCHITECTURES native)
 
